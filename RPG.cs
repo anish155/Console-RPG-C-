@@ -305,4 +305,128 @@ class Program
     }
 
     }
+
+    static Dictionary<string, (string AttackType, string Race, string Tier, int Hp, int Atk, int Def, int Spd, string Ability)> Monster_stats()
+{
+    return new Dictionary<string, (string AttackType, string Race, string Tier, int Hp, int Atk, int Def, int Spd, string Ability)>(StringComparer.OrdinalIgnoreCase)
+    {
+        // ==================== BEASTS ====================
+
+        ["Goblin"] = ("Melee", "Beast", "Low", 80, 20, 10, 30, "Slash"),
+        ["Orc"] = ("Melee", "Beast", "Mid", 120, 30, 20, 25, "Smash"),
+        ["Troll"] = ("Melee", "Beast", "Mid", 150, 40, 30, 20, "Regenerate"),
+        ["Dire Wolf"] = ("Melee", "Beast", "Low", 90, 30, 10, 45, "Savage Bite"),
+        ["Ogre"] = ("Melee", "Beast", "Mid", 200, 45, 35, 15, "Ground Slam"),
+        ["Werebear"] = ("Melee", "Beast", "Mid", 220, 50, 40, 20, "Feral Roar"),
+
+        // ==================== UNDEAD ====================
+
+        ["Skeleton"] = ("Melee", "Undead", "Low", 60, 15, 5, 20, "Bone Throw"),
+        ["Zombie"] = ("Melee", "Undead", "Low", 90, 20, 10, 15, "Infectious Bite"),
+        ["Vampire"] = ("Melee", "Undead", "Mid", 100, 25, 15, 40, "Life Drain"),
+        ["Ghoul"] = ("Melee", "Undead", "Low", 75, 25, 8, 35, "Claw Rend"),
+        ["Wraith"] = ("Ranged", "Undead", "Mid", 110, 40, 15, 45, "Soul Drain"),
+        ["Lich"] = ("Ranged", "Undead", "Boss", 280, 65, 35, 30, "Death Bolt"),
+
+        // ==================== ELEMENTALS ====================
+
+        ["Fire Elemental"] = ("Ranged", "Elemental", "Mid", 130, 45, 20, 35, "Flame Burst"),
+        ["Ice Elemental"] = ("Ranged", "Elemental", "Mid", 140, 35, 30, 25, "Frost Nova"),
+        ["Storm Elemental"] = ("Ranged", "Elemental", "Mid", 120, 50, 15, 50, "Lightning Strike"),
+        ["Earth Golem"] = ("Melee", "Elemental", "Mid", 250, 35, 60, 10, "Rock Smash"),
+
+        // ==================== DEMONS ====================
+
+        ["Imp"] = ("Ranged", "Demon", "Low", 70, 25, 8, 40, "Fire Bolt"),
+        ["Hellhound"] = ("Melee", "Demon", "Mid", 140, 45, 20, 45, "Infernal Bite"),
+        ["Demon"] = ("Melee", "Demon", "Mid", 180, 50, 30, 30, "Demonic Strike"),
+        ["Demon Lord"] = ("Ranged", "Demon", "Boss", 400, 60, 50, 45, "Hellfire Blast"),
+
+        // ==================== DRAGONS ====================
+
+        ["Drake"] = ("Melee", "Dragon", "Mid", 180, 45, 30, 35, "Dragon Claw"),
+        ["Wyvern"] = ("Ranged", "Dragon", "Mid", 200, 55, 25, 45, "Poison Breath"),
+        ["Ancient Dragon"] = ("Ranged", "Dragon", "Boss", 500, 80, 60, 40, "Ancient Flame"),
+
+        // ==================== SPECIAL ====================
+
+        ["Minotaur"] = ("Melee", "Mythic", "Mid", 230, 55, 40, 25, "Axe Charge"),
+        ["Gargoyle"] = ("Melee", "Mythic", "Mid", 180, 35, 50, 20, "Stone Skin"),
+        ["Cyclops"] = ("Ranged", "Mythic", "Boss", 350, 70, 45, 20, "Eye Beam")
+    };
+}
+static string GetMonsterForStage(
+        int stage,
+        Random random,
+        Dictionary<string, (string AttackType, string Race, string Tier, int Hp, int Atk, int Def, int Spd, string Ability)> monsters)
+    {
+        if (stage < 1 || stage > 50)
+        {
+            throw new ArgumentOutOfRangeException(nameof(stage), "Stages must be between 1 and 50.");
+        }
+
+        var lowMonsters = monsters
+            .Where(monster => monster.Value.Tier == "Low")
+            .Select(monster => monster.Key)
+            .ToList();
+
+        var midMonsters = monsters
+            .Where(monster => monster.Value.Tier == "Mid")
+            .Select(monster => monster.Key)
+            .ToList();
+
+        var strongMidMonsters = monsters
+            .Where(monster => monster.Value.Tier == "Mid" &&
+                              (monster.Value.Hp >= 180 || monster.Value.Atk >= 50 || monster.Value.Def >= 40))
+            .Select(monster => monster.Key)
+            .ToList();
+
+        var bossMonsters = monsters
+            .Where(monster => monster.Value.Tier == "Boss")
+            .Select(monster => monster.Key)
+            .ToList();
+
+        List<string> pool;
+
+        if (stage == 50)
+        {
+            pool = bossMonsters;
+        }
+        else if (stage <= 10)
+        {
+            pool = lowMonsters.Concat(lowMonsters).Concat(lowMonsters).Concat(midMonsters).ToList();
+        }
+        else if (stage <= 20)
+        {
+            pool = lowMonsters.Concat(midMonsters).ToList();
+        }
+        else if (stage <= 30)
+        {
+            pool = lowMonsters.Concat(midMonsters).Concat(midMonsters).Concat(midMonsters).ToList();
+        }
+        else if (stage <= 40)
+        {
+            pool = midMonsters.Concat(strongMidMonsters).ToList();
+        }
+        else
+        {
+            pool = strongMidMonsters;
+        }
+
+        return pool[random.Next(pool.Count)];
+    }
+
+    static void Stages()
+    {
+        Random random = new Random();
+        var monsters = Monster_stats();
+
+        for (int stage = 1; stage <= 50; stage++)
+        {
+            string monster = GetMonsterForStage(stage, random, monsters);
+            string stageLabel = stage == 50 ? "Final Boss" : $"Stage {stage}";
+
+            Console.WriteLine($"{stageLabel}: {monster}");
+        }
+    }
 }
