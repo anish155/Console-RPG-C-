@@ -1,8 +1,8 @@
 # Console RPG (C#)
 
-A console-based role-playing game written in C#. This project is being developed incrementally, beginning with the hero system and moving toward a complete turn-based RPG experience.
+A console-based role-playing game written in C#. This project is being developed incrementally, beginning with the hero system and expanding toward a complete turn-based RPG experience.
 
-> **Project status:** Hero selection and hero data are implemented. Enemy systems are planned for the next development session.
+> **Project status:** Hero selection, hero data, monster stats, and the stage system are implemented. The battle system is planned for the next development session.
 
 ## Current Progress
 
@@ -30,6 +30,23 @@ The current version includes a complete hero selection flow:
 - Case-insensitive hero data lookup using a dictionary.
 - Invalid class selections are handled by prompting the player again.
 
+### ✅ Monster Stats — Completed
+
+The project now includes the foundation for enemies and monsters:
+
+- Monster data and names
+- Monster statistics
+- Monster abilities
+- Monster encounters prepared for future combat
+
+### ✅ Stage System — Completed
+
+A stage system has been added to organize the game's progression:
+
+- Structured stages for monster encounters
+- Progression through multiple stages
+- A foundation for connecting stages to the future battle system
+
 ## Hero Classes
 
 | Class | Playstyle | Example Abilities |
@@ -43,27 +60,25 @@ The current version includes a complete hero selection flow:
 
 ## Planned Development
 
-### 🔜 Enemies — Next
+### 🔜 Battle System — Next
 
-The next development stage will introduce the enemy system, including:
+The next development session will focus on integrating the battle system, including:
 
-- Enemy types and names
-- Enemy statistics
-- Enemy abilities
-- Enemy selection or encounter generation
-- The foundation for hero-versus-enemy combat
+- Hero-versus-monster combat
+- Turn order and speed-based actions
+- Attack, defend, healing, and ability actions
+- Mana and ability costs
+- Damage calculation using hero and monster stats
+- Monster AI
+- Victory and defeat conditions
+- Stage completion and progression after battles
 
 ### Future Features
 
-- Turn-based combat
-- Attack, defend, healing, and ability actions
-- Mana and ability costs
-- Damage calculation
-- Enemy AI
-- Victory and defeat conditions
 - Multiple battles or adventure stages
 - Improved input validation
 - Better project structure using separate classes and files
+- Additional heroes, monsters, abilities, and stages
 
 ## Project Structure
 
@@ -91,6 +106,7 @@ Console-RPG-C-/
 3. Build and run the application.
 4. Choose a hero class and then select a hero from the available options.
 5. Review the selected hero's statistics and ability in the console.
+6. Progress through the available stages and review the monster encounters.
 
 ## Development Notes
 
@@ -102,8 +118,9 @@ This project is being built as a learning-focused C# console application. The cu
 - Switch expressions
 - Console input and output
 - Basic validation and control flow
+- Organizing monsters and encounters into stages
 
-The codebase will be refactored as the game expands so that heroes, enemies, combat, and game flow can be maintained independently.
+The codebase will be refactored as the game expands so that heroes, monsters, combat, stages, and game flow can be maintained independently.
 
 ## License
 
