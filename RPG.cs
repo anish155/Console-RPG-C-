@@ -1,7 +1,25 @@
+using System.Runtime.InteropServices;
+
 namespace myGamme;
 
 class Program
 {
+    private const int LeftMouseButton = 0x01;
+    private static bool gameRunning = true;
+    private static bool leftMouseWasDown;
+    private static int playerX;
+    private static int playerY;
+    private static int monsterX;
+    private static int monsterY;
+    private static string spawnedMonster;
+    private static DateTime lastMonsterMove = DateTime.UtcNow;
+    private static readonly TimeSpan MonsterMoveDelay = TimeSpan.FromMilliseconds(750);
+    private const int MapWidth = 20;
+    private const int MapHeight = 10;
+
+    [DllImport("user32.dll")]
+    private static extern short GetAsyncKeyState(int virtualKey);
+
     static string Character_class()
     {
         Console.WriteLine("classes of heroes");
@@ -428,5 +446,179 @@ static string GetMonsterForStage(
 
             Console.WriteLine($"{stageLabel}: {monster}");
         }
+    }
+
+    static void BattleSystem()
+    {
+        Console.WriteLine("Battle controls: W/A/S/D move, Shift dash, Ctrl dodge, Left mouse button attack, Esc quit.");
+        SpawnMonster();
+        DrawBattleMap();
+
+        while (gameRunning)
+        {
+            CheckForMouseAttack();
+            MoveMonsterAutomatically();
+
+            if (!Console.KeyAvailable)
+            {
+                Thread.Sleep(25);
+                continue;
+            }
+
+            ConsoleKeyInfo input = Console.ReadKey(true);
+
+            switch (input.Key)
+            {
+                case ConsoleKey.W:
+                    MovePlayer(0, -1);
+                    break;
+                case ConsoleKey.A:
+                    MovePlayer(-1, 0);
+                    break;
+                case ConsoleKey.S:
+                    MovePlayer(0, 1);
+                    break;
+                case ConsoleKey.D:
+                    MovePlayer(1, 0);
+                    break;
+                case ConsoleKey.LeftShift:
+                case ConsoleKey.RightShift:
+                    Dash();
+                    break;
+                case ConsoleKey.LeftCtrl:
+                case ConsoleKey.RightCtrl:
+                    Dodge();
+                    break;
+                case ConsoleKey.Escape:
+                    gameRunning = false;
+                    break;
+            }
+        }
+    }
+
+    static void MovePlayer(int horizontal, int vertical)
+    {
+        int oldX = playerX;
+        int oldY = playerY;
+        playerX = Math.Clamp(playerX + horizontal, 0, MapWidth - 1);
+        playerY = Math.Clamp(playerY + vertical, 0, MapHeight - 1);
+
+        Console.WriteLine($"Player walked ({horizontal}, {vertical}) from ({oldX}, {oldY}) to ({playerX}, {playerY})");
+        DrawBattleMap();
+    }
+
+    static void SpawnMonster()
+    {
+        Random random = new Random();
+        var monsters = Monster_stats();
+        spawnedMonster = GetMonsterForStage(1, random, monsters);
+        monsterX = 5;
+        monsterY = 5;
+
+        Console.WriteLine($"{spawnedMonster} spawned at ({monsterX}, {monsterY})");
+        Console.WriteLine($"Player starting point: ({playerX}, {playerY})");
+    }
+
+    static void MoveMonsterAutomatically()
+    {
+        if (DateTime.UtcNow - lastMonsterMove < MonsterMoveDelay)
+        {
+            return;
+        }
+
+        int oldX = monsterX;
+        int oldY = monsterY;
+
+        if (monsterX < playerX)
+        {
+            monsterX++;
+        }
+        else if (monsterX > playerX)
+        {
+            monsterX--;
+        }
+
+        if (monsterY < playerY)
+        {
+            monsterY++;
+        }
+        else if (monsterY > playerY)
+        {
+            monsterY--;
+        }
+
+        if (oldX != monsterX || oldY != monsterY)
+        {
+            Console.WriteLine($"{spawnedMonster} moved from ({oldX}, {oldY}) to ({monsterX}, {monsterY})");
+            DrawBattleMap();
+        }
+
+        lastMonsterMove = DateTime.UtcNow;
+    }
+
+    static void Dash()
+    {
+        playerX = Math.Min(playerX + 2, MapWidth - 2);
+        Console.WriteLine($"Player dashed to ({playerX}, {playerY})");
+        DrawBattleMap();
+    }
+
+    static void Dodge()
+    {
+        playerX = Math.Max(playerX - 1, 0);
+        Console.WriteLine($"Player dodged to ({playerX}, {playerY})");
+        DrawBattleMap();
+    }
+
+    static void Attack()
+    {
+        Console.WriteLine($"Player attacked from ({playerX}, {playerY})");
+    }
+
+    static void DrawBattleMap()
+    {
+        Console.WriteLine();
+        for (int y = -1; y <= MapHeight; y++)
+        {
+            for (int x = -1; x <= MapWidth; x++)
+            {
+                if (x == playerX && y == playerY && x == monsterX && y == monsterY)
+                {
+                    Console.Write("X");
+                }
+                else if (x == playerX && y == playerY)
+                {
+                    Console.Write("P");
+                }
+                else if (x == monsterX && y == monsterY)
+                {
+                    Console.Write("M");
+                }
+                else if (x < 0 || x >= MapWidth || y < 0 || y >= MapHeight)
+                {
+                    Console.Write("#");
+                }
+                else
+                {
+                    Console.Write(".");
+                }
+            }
+
+            Console.WriteLine();
+        }
+
+        Console.WriteLine("P = Player | M = Monster | X = Same position | # = Barrier");
+    }
+
+    static void CheckForMouseAttack()
+    {
+        bool leftMouseIsDown = (GetAsyncKeyState(LeftMouseButton) & 0x8000) != 0;
+
+        if (leftMouseIsDown && !leftMouseWasDown)
+        {
+            Attack();
+        }
+
+        leftMouseWasDown = leftMouseIsDown;
     }
 }
